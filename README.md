@@ -1,29 +1,34 @@
-# Proyecto individual: CartPole + Acrobot
+# Individual Project: CartPole + Acrobot
 
-## Herramientas
-Python 3.11 de 64 bits, terminal PowerShell y opcionalmente VS Code y Git.
-No necesitas CUDA, Colab, cuentas de servicios ni una API key. CPU es el valor predeterminado.
-Extrae el ZIP y abre una terminal dentro de esta carpeta (donde está run.py).
+## Tools
+64-bit Python 3.11, PowerShell terminal, and optionally VS Code and Git.
 
-## Instalación en Windows
+You do not need CUDA, Colab, service accounts, or an API key. CPU is the default.
+
+Extract the ZIP file and open a terminal inside this folder (where `run.py` is located).
+
+## Installation on Windows
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
-En Linux: python3 -m venv .venv; usa .venv/bin/python en lugar del ejecutable de Windows.
-Los rangos de dependencias permiten instalación; cada ejecución guarda requirements_lock.txt con las versiones exactas. Para reproducir usa ese archivo en un entorno limpio.
 
-## Verificación corta (no es evidencia científica)
+On Linux: `python3 -m venv .venv`; use `.venv/bin/python` instead of the Windows executable.
+
+The dependency version ranges allow installation; each run saves a `requirements_lock.txt` file containing the exact versions. To reproduce the environment, use that file in a clean environment.
+
+## Quick Verification (Not Scientific Evidence)
 ```powershell
 .\.venv\Scripts\python.exe run.py --smoke
 .\.venv\Scripts\python.exe plot.py --root results_smoke
 .\.venv\Scripts\python.exe video.py results_smoke/cart_dqn/seed_11
 ```
-Ejecuta las diez configuraciones con tres semillas y solo 1200 pasos. Aunque aprenda poco, prueba actualizaciones, escritura, evaluación y generación de figuras. Puede tardar minutos por las evaluaciones.
 
-## Experimentos completos
+Runs all ten configurations with three seeds and only 1,200 steps. Even if little learning occurs, this verifies parameter updates, file writing, evaluation, and figure generation. It may take several minutes due to evaluations.
+
+## Full Experiments
 ```powershell
 .\.venv\Scripts\python.exe run.py --suite tier1
 .\.venv\Scripts\python.exe run.py --suite tier2
@@ -31,56 +36,84 @@ Ejecuta las diez configuraciones con tres semillas y solo 1200 pasos. Aunque apr
 .\.venv\Scripts\python.exe video.py results/cart_dqn/seed_11
 .\.venv\Scripts\python.exe video.py results/ac_base/seed_11
 ```
-También puedes ejecutar ambos tiers con `run.py --suite all`.
-Para una configuración: `run.py --experiment ac_base` (tres semillas).
-Para una medición inicial: `run.py --experiment ac_base --seeds 11`.
-Si luego ejecutas tier2, la ejecución completa existente se omite.
-Reproduce cada figura: tier1 requiere --suite tier1; las otras tres requieren --suite tier2; luego plot.py. Para reproducir desde cero usa --out results_repeat y plot.py --root results_repeat.
 
-## Diseño experimental
-- Semillas 11,22,33 para Python, NumPy, PyTorch y entorno.
-- CartPole: 200000 pasos por ejecución en ambos algoritmos; bins 6,10,20 por dimensión. Rangos: posición ±2.4, velocidad ±3, ángulo ±0.2095 y velocidad angular ±3.5. Valores externos caen en los bins extremos; esta saturación es una limitación a discutir.
-- Acrobot: 300000 pasos por ejecución; es un presupuesto inicial, no garantía de éxito.
-- DQN: dos capas de 64 unidades, ReLU, Adam, Huber, buffer 50000, minibatch 64, gamma .99, una actualización cada cuatro pasos tras 1000 pasos iniciales.
-- Red objetivo copiada cada 1000 pasos. Ablación: se usa la red online para calcular el objetivo, sin gradiente; todo lo demás permanece igual.
-- Exploración epsilon lineal de 1 a .05 durante la mitad del presupuesto y luego constante. No se presenta como GLIE.
-- Estudio de learning rate: .0003,.001,.003. Estudio de fracción de decaimiento: .25,.5,.75. Una variable por vez y base compartida.
-- Evaluación cada 10000 pasos con 10 episodios greedy; entorno separado y semillas fijas de evaluación para comparabilidad. Evaluación final con 100 episodios y semillas distintas.
-- Curvas: media ± una desviación estándar ENTRE semillas; no es intervalo de confianza.
-- first_threshold_10ep es solo primer cruce provisional basado en 10 episodios. La columna success verifica el umbral en los 100 episodios finales; no prueba mantenimiento del rendimiento.
-- Umbrales del enunciado: CartPole 475; Acrobot -100. Los retornos de entrenamiento y evaluación se guardan separados.
-- Reiniciar omite ejecuciones terminadas, pero una ejecución interrumpida se reinicia desde cero. Los modelos finales no son checkpoints de reanudación.
-- Cambia presupuestos y parámetros en configs() de run.py ANTES de lanzar; usa otra carpeta --out para un diseño nuevo. No mezcles resultados de protocolos diferentes.
+You can also run both tiers using `run.py --suite all`.
 
-## Archivos producidos
-results/<experimento>/seed_<n>/ contiene config.json, training.csv, evaluation.csv, summary.json, model.pt o q.npy. video.py añade agent.gif.
-results/figures contiene cuatro gráficos; summary.csv agrega resultados, dispersión, tiempo y umbrales.
-summary.json conserva los 100 retornos finales, tiempos total/evaluación/entrenamiento y semilla.
-hardware.json registra sistema y dispositivo; agrega manualmente modelo de CPU, RAM y modo energético si el sistema no los identifica.
-El tiempo de entrenamiento excluye evaluaciones; wall_seconds incluye evaluación final y guardado del modelo. Registra ambos al comparar.
+For a single configuration: `run.py --experiment ac_base` (three seeds).
 
-## Qué esperar
-El programa muestra nombre, semilla, pasos y retorno medio. No abre ventanas durante entrenamiento. CartPole puede mejorar hacia 500 y Acrobot hacia valores menos negativos; las curvas pueden oscilar y ciertas configuraciones pueden fallar. Ningún umbral está garantizado.
-Los 30 entrenamientos suman 7.8 millones de pasos de entrenamiento, más evaluación. Mide primero una ejecución para estimar el tiempo real. Los tiempos anteriormente discutidos son orientativos.
-No selecciones solo la mejor semilla para las tablas. Los GIF usan una semilla fija ilustrativa y no sustituyen evaluaciones.
+For an initial measurement: `run.py --experiment ac_base --seeds 11`.
 
-## Entrega académica pendiente
-Este paquete proporciona infraestructura experimental, NO un artículo con resultados ya obtenidos.
-Después de entrenar faltan interpretar resultados, escribir el PDF de 6–8 páginas a doble columna, análisis teórico de 1–2 páginas, declaración de IA y apéndice con prompts, repositorio Git y defensa.
-Estructura del artículo: título, resumen, introducción, pertinencia, métodos, configuración experimental, resultados, discusión, análisis de acciones continuas/píxeles, limitaciones, declaración IA y referencias verificadas.
-No inventes cifras ni resultados. Guarda los prompts utilizados, incluyendo la solicitud de este paquete.
-La defensa exige explicar discretización, Bellman, epsilon, replay, red objetivo, terminal vs truncamiento, evaluación y bandas entre semillas.
+If you subsequently run tier2, any existing completed run will be skipped.
 
-## Referencias para estudiar
+To reproduce each figure: tier1 requires `--suite tier1`; the other three figures require `--suite tier2`; then run `plot.py`.
+
+To reproduce everything from scratch, use `--out results_repeat` and `plot.py --root results_repeat`.
+
+## Experimental Design
+
+- Seeds 11, 22, and 33 are used for Python, NumPy, PyTorch, and the environment.
+- CartPole: 200,000 steps per run for both algorithms; 6, 10, and 20 bins per dimension. Ranges: position ±2.4, velocity ±3, angle ±0.2095, and angular velocity ±3.5. Values outside these ranges are assigned to the extreme bins; this saturation is a limitation that should be discussed.
+- Acrobot: 300,000 steps per run; this is an initial training budget, not a guarantee of success.
+- DQN: two hidden layers of 64 units, ReLU, Adam, Huber loss, replay buffer of 50,000 transitions, minibatch size of 64, gamma of 0.99, and one update every four steps after an initial 1,000-step warm-up.
+- The target network is copied every 1,000 steps. Ablation: the online network is used to compute the target, without gradients; everything else remains unchanged.
+- Linear epsilon decay from 1 to 0.05 over half of the training budget, followed by a constant value. This is not presented as GLIE.
+- Learning rate study: 0.0003, 0.001, and 0.003. Decay fraction study: 0.25, 0.5, and 0.75. One variable is changed at a time, using a shared baseline.
+- Evaluation every 10,000 steps using 10 greedy episodes; a separate environment and fixed evaluation seeds are used for comparability. Final evaluation uses 100 episodes with different seeds.
+- Curves: mean ± one standard deviation ACROSS seeds; this is not a confidence interval.
+- `first_threshold_10ep` represents only the first provisional threshold crossing based on 10 episodes. The `success` column verifies the threshold using the final 100 episodes; it does not demonstrate sustained performance.
+- Assignment thresholds: CartPole 475; Acrobot -100. Training and evaluation returns are stored separately.
+- Restarting skips completed runs, but an interrupted run starts again from scratch. Final models are not checkpoints for resuming training.
+- Modify budgets and parameters in `configs()` within `run.py` BEFORE launching experiments; use a different `--out` folder for a new experimental design. Do not mix results from different protocols.
+
+## Generated Files
+
+`results/<experiment>/seed_<n>/` contains `config.json`, `training.csv`, `evaluation.csv`, `summary.json`, and either `model.pt` or `q.npy`. The `video.py` script adds `agent.gif`.
+
+`results/figures` contains four plots; `summary.csv` aggregates results, variability, timing, and thresholds.
+
+`summary.json` preserves the 100 final episode returns, total/evaluation/training times, and seed.
+
+`hardware.json` records system and device information; manually add the CPU model, RAM, and power mode if the system does not identify them.
+
+Training time excludes evaluations; `wall_seconds` includes final evaluation and model saving. Record both when making comparisons.
+
+## What to Expect
+
+The program displays the experiment name, seed, steps, and mean return. It does not open windows during training.
+
+CartPole may improve toward 500, while Acrobot may achieve less negative returns; curves may fluctuate, and some configurations may fail. No performance threshold is guaranteed.
+
+The 30 training runs total 7.8 million training steps, plus evaluation. Measure one run first to estimate the actual execution time. Previously discussed timing estimates are approximate.
+
+Do not select only the best seed for the tables. GIFs use a fixed illustrative seed and do not replace evaluations.
+
+## Pending Academic Deliverables
+
+This package provides experimental infrastructure, NOT a research paper with results already obtained.
+
+After training, the remaining tasks include interpreting the results, writing the 6–8-page double-column PDF, preparing a 1–2-page theoretical analysis, including an AI disclosure statement and an appendix with prompts, providing the Git repository, and preparing for the defense.
+
+Paper structure: title, abstract, introduction, relevance, methods, experimental setup, results, discussion, analysis of continuous actions/pixel observations, limitations, AI disclosure statement, and verified references.
+
+Do not fabricate numbers or results. Save the prompts used, including the request that generated this package.
+
+The defense requires explaining discretization, Bellman equations, epsilon, experience replay, target networks, termination vs. truncation, evaluation, and variability bands across seeds.
+
+## References for Further Study
+
 https://docs.pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+
 https://gymnasium.farama.org/environments/classic_control/cart_pole/
+
 https://gymnasium.farama.org/environments/classic_control/acrobot/
 
-## Diagnóstico de CartPole y gráficos revisados
+## CartPole Diagnostics and Revised Plots
 
-Ejecutar desde la raíz del proyecto con el entorno virtual activo.
-El primer comando reproduce el diagnóstico de una semilla con la tasa reducida.
-El segundo reproduce el ajuste con tres semillas y copia de la red objetivo cada 10 000 pasos.
+Run the following commands from the project root with the virtual environment activated.
+
+The first command reproduces the single-seed diagnostic using the reduced learning rate.
+
+The second command reproduces the adjusted experiment using three seeds and target network updates every 10,000 steps.
 
 ```powershell
 python -c "from pathlib import Path; from run import configs, run; c=configs()['cart_dqn']; c['lr']=0.0001; run('cart_dqn_lr0001', c, 11, Path('results_diagnostico'), False)"
@@ -88,6 +121,8 @@ python -c "from pathlib import Path; from run import configs, run; c=configs()['
 python plot_revision.py
 ```
 
-Los gráficos revisados y la tabla se guardan en `resultados_revisados/`.
-El informe en inglés está en `report/`, con `main.tex` y las figuras para compilarlo con pdfLaTeX.
-Las demostraciones de CartPole y Acrobot están en `evidencias/`.
+The revised plots and table are saved in `resultados_revisados/`.
+
+The English report is located in `report/`, containing `main.tex` and the figures needed to compile it using pdfLaTeX.
+
+The CartPole and Acrobot demonstrations are located in `evidencias/`.
