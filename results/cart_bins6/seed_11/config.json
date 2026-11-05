@@ -1,0 +1,18 @@
+{
+  "gamma": 0.99,
+  "alpha": 0.1,
+  "lr": 0.001,
+  "buffer": 50000,
+  "batch": 64,
+  "warmup": 1000,
+  "train_every": 4,
+  "target_every": 1000,
+  "no_target": false,
+  "decay": 0.5,
+  "device": "cpu",
+  "steps": 200000,
+  "eval_every": 10000,
+  "env": "CartPole-v1",
+  "algorithm": "tabular",
+  "bins": 6
+}
